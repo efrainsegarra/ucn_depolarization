@@ -8,11 +8,13 @@
 #include "cminpack.h"
 #include <stdlib.h>
 #include <iomanip>
+#include <string>
 
 using std::cout;
 using std::cerr;
 using std::endl;
 using std::vector;
+using std::string;
 double alpha( double G, const double *pars );
 double zbar( double en );
 double espec( double e, double a, double b, double emax );
@@ -30,8 +32,8 @@ struct DataPoint{
 	double AlphaBot;
 	double AlphaErrBot;
 };
-std::vector<DataPoint> data;
-std::vector<DataPoint> bootstrap_data;
+std::vector<DataPoint> g10_data;
+std::vector<DataPoint> bootstrap_g10_data;
 
 
 // Main
@@ -54,24 +56,27 @@ int main(int argc, char ** argv){
 	// Load the data structure that we will use:
 	std::ifstream f;
 	std::string line;
-	f.open("../test_data.txt");
+	f.open("../data/g10_data.txt");
 	f.ignore(1000, '\n'); // skip 1 line of the file
 	if( f.is_open() ){
 		while( getline(f,line) ){
 			std::istringstream ss(line);
+			string flag;
 			double g, alphab, errb, alphat, errt;
-			ss >> g >> alphab >> errb >> alphat >> errt;
-			DataPoint dat;
-			dat.G = g;
-			dat.AlphaTop = alphat;
-			dat.AlphaBot = alphab;
-			dat.AlphaErrTop = errt;
-			dat.AlphaErrBot = errb;
-			data.push_back( dat );
+			ss >> flag >> g >> alphab >> errb >> alphat >> errt;
+			if( flag == "75scut" ){
+				DataPoint dat;
+				dat.G = g;
+				dat.AlphaTop = alphat;
+				dat.AlphaBot = alphab;
+				dat.AlphaErrTop = errt;
+				dat.AlphaErrBot = errb;
+				g10_data.push_back( dat );
+			}
 		}
 	}
 	f.close();
-	nDataPoints = data.size();
+	nDataPoints = g10_data.size();
 
 	bootstrap_opt = atoi(argv[1]);
 	if( bootstrap_opt != 0 && bootstrap_opt != 1 ){ cerr << "unexpected input!\n"; exit(-1); }
@@ -81,13 +86,13 @@ int main(int argc, char ** argv){
 		std::random_device rd; // obtain a random number from hardware
 		std::mt19937 gen(rd()); // seed the generator
 
-		std::uniform_int_distribution<> distr_data(0, data.size()-1);
-		for( int i = 0 ; i < data.size() ; ++i ){ 	
-			int rand_elem = distr_data(gen);
-			bootstrap_data.push_back( data.at(rand_elem) );
+		std::uniform_int_distribution<> distr_g10_data(0, g10_data.size()-1);
+		for( int i = 0 ; i < g10_data.size() ; ++i ){ 	
+			int rand_elem = distr_g10_data(gen);
+			bootstrap_g10_data.push_back( g10_data.at(rand_elem) );
 		}
-		data.clear();
-		data = bootstrap_data;
+		g10_data.clear();
+		g10_data = bootstrap_g10_data;
 	}
 
 	///////////////////////////////////////////////////////////////////////////
@@ -171,12 +176,12 @@ int Chi2( void *p, int m, int n, const double *pars, double *fvec, int iflag){
 	int dat_point = 0;
 
 	///////////////////////////////////////////////////////////////////////////
-	// Perform loop over exp data
+	// Perform loop over g10 data
 	double chi2 = 0.;
-	for( int i = 0 ; i < data.size(); ++i ){
-		double dAlpha = data.at(i).AlphaBot;
-		double dG = data.at(i).G;
-		double dAlphaErr = data.at(i).AlphaErrBot;
+	for( int i = 0 ; i < g10_data.size(); ++i ){
+		double dAlpha = g10_data.at(i).AlphaBot;
+		double dG = g10_data.at(i).G;
+		double dAlphaErr = g10_data.at(i).AlphaErrBot;
 
 
 		// Integral over energy spectrum
@@ -187,7 +192,7 @@ int Chi2( void *p, int m, int n, const double *pars, double *fvec, int iflag){
 		fvec[dat_point] = this_chi2;
 		++dat_point;
 		chi2 += pow(this_chi2,2);
-	} // end loop over data
+	} // end loop over g10_data
 
 
 	fvec[dat_point] = 0;
