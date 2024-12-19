@@ -54,33 +54,38 @@ const double T = 180.; 				// s
 const double R = 40;				// cm
 const double H = 18;				// cm
 const double mN = 1.67492750056E-27;		// kg
-const double emax = 54;				// neV
+double emax = 35;				// neV
 
 // Main
 int main(int argc, char ** argv){
 
-	if (argc<4){
-		cerr << "Wrong number of arguments used.\n\tPlease instead use: ./code [bootstrap opt] [bot_top opt] [diffuse opt]\n";
-		cerr << "**********************************\n";
-		cerr << "\t\t[bootstrap opt == 0]: Don't bootstrap\n";
-		cerr << "\t\t[bootstrap opt == 1]: Bootstrap\n";
-		cerr << "**********************************\n";
-		cerr << "\t\t[bot_top opt == 0]: Fit bottom chamber\n";
-		cerr << "\t\t[bot_top opt == 1]: Fit top chamber\n";
-		cerr << "**********************************\n";
-		cerr << "\t\t[diffuse opt == 0]: p_ring=p_electrode\n";
-		cerr << "\t\t[diffuse opt == 1]: p_ring=0\n";
-		cerr << "\t\t[diffuse opt == 2]: p_ring=1\n";
-		cerr << "**********************************\n";
+	if (argc<5){
+		cout << "Wrong number of arguments used.\n\tPlease instead use: ./code [bootstrap opt] [bot_top opt] [diffuse opt] [emax]\n";
+		cout << "**********************************\n";
+		cout << "\t\t[bootstrap opt == 0]: Don't bootstrap\n";
+		cout << "\t\t[bootstrap opt == 1]: Bootstrap\n";
+		cout << "**********************************\n";
+		cout << "\t\t[bot_top opt == 0]: Fit bottom chamber\n";
+		cout << "\t\t[bot_top opt == 1]: Fit top chamber\n";
+		cout << "**********************************\n";
+		cout << "\t\t[diffuse opt == 0]: p_ring=p_electrode\n";
+		cout << "\t\t[diffuse opt == 1]: p_ring=0\n";
+		cout << "\t\t[diffuse opt == 2]: p_ring=1\n";
+		cout << "\t\t[diffuse opt == 3]: p_ring, p_electrode\n";
+		cout << "**********************************\n";
+		cout << "\t\t[emax]: 35 (rexolite) or 54 (aluminium)\n";
+		cout << "**********************************\n";
+
 		return -1;
 	}
 	bootstrap_opt = atoi(argv[1]);
 	bottop_opt = atoi(argv[2]);
 	diffuse_opt = atoi(argv[3]);
-	if( bootstrap_opt != 0 && bootstrap_opt != 1 )		{ cerr << "unexpected input!\n"; exit(-1); }
-	if( bottop_opt != 0 && bottop_opt != 1 )		{ cerr << "unexpected input!\n"; exit(-1); }
-	if( diffuse_opt < 0 || diffuse_opt > 2 )		{ cerr << "unexpected input!\n"; exit(-1); }
-
+	emax = atoi(argv[4]);
+	if( bootstrap_opt != 0 && bootstrap_opt != 1 )		{ cout << "unexpected bootstrap input!\n"; exit(-1); }
+	if( bottop_opt != 0 && bottop_opt != 1 )		{ cout << "unexpected bot/top input!\n"; exit(-1); }
+	if( diffuse_opt < 0 || diffuse_opt > 3 )		{ cout << "unexpected diffuse input!\n"; exit(-1); }
+	if( emax < 0 || emax > 230 )				{ cout << "unexpected emax input!\n"; exit(-1); }
 	// Random seed for offsets
 	srand (time(NULL));
 	//srand(1);	
@@ -93,21 +98,12 @@ int main(int argc, char ** argv){
 
 	///////////////////////////////////////////////////////////////////////////
 	// Now we can setup our Chi2 function and minimize it!
-	//int nParams = 5; // for energy spectrum & alpha & shift
-	//int nParams = 3; // for energy spectrum & alpha & shift
 	int nParams = 8; // for energy spectrum & alpha & shifts & diffusivities
+	if( diffuse_opt == 3 ) nParams = 9;
 
 
 	double *params = new double[nParams];
 	// Set initial guess for params
-	//params[0] = 2;		// a
-	//params[params[1] = 1.5;	// b
-	//params[params[2] = 95;		// Emax
-	//params[params[3] = 0.86;	// alpha0
-	//params[params[4] = 2;		// pT/cm offset
-	//params[0] = 80;		// Emax
-	//params[1] = 0.86;	// alpha0
-	//params[2] = 2;		// pT/cm offset
 	params[0] = 2;		// a
 	params[1] = 1.5;	// b
 	params[2] = 1;		// alpha0
@@ -116,7 +112,7 @@ int main(int argc, char ** argv){
 	params[5] = 0;		// g11 pT/cm offset
 	params[6] = 0;		// g20 pT/cm offset
 	params[7] = 0.5;	// diffusivity
-	//params[8] = 0.5;	// diffusivity
+	if( diffuse_opt == 3 ) params[8] = 0.5;	// diffusivity
 
 	// Define some working memory for the minimization algorithm
 	nDataPoints+=1;
@@ -173,7 +169,7 @@ int Chi2( void *p, int m, int n, const double *pars, double *fvec, int iflag){
 	// iflag not used??
 
 	// Want to return chi2 which is calculated given the parameters to be minimized
-	std::cerr << "************ Fitting in progress *************\n";
+	std::cout << "************ Fitting in progress *************\n";
 	int dat_point = 0;
 
 
@@ -286,23 +282,23 @@ int Chi2( void *p, int m, int n, const double *pars, double *fvec, int iflag){
 	fvec[dat_point] = 0;
 	++dat_point;
 	
-	std::cerr << "------------Finished calculations!------------\n";
-	std::cerr << "\tOptions used:\n";
-	std::cerr << "\t\tbootstrap_opt = " << bootstrap_opt << "\n";
-	std::cerr << "\t\tbottop_opt = " << bottop_opt << "\n";
-	std::cerr << "\tCurrent parameters: " << num_pars << "\n";
-	for( int i = 0 ; i < num_pars ; ++i ) std::cerr << "\t\t" << pars[i] << "\n";
+	std::cout << "------------Finished calculations!------------\n";
+	std::cout << "\tOptions used:\n";
+	std::cout << "\t\tbootstrap_opt = " << bootstrap_opt << "\n";
+	std::cout << "\t\tbottop_opt = " << bottop_opt << "\n";
+	std::cout << "\tCurrent parameters: " << num_pars << "\n";
+	for( int i = 0 ; i < num_pars ; ++i ) std::cout << "\t\t" << pars[i] << "\n";
 	double chi2 = chi2_g10 + chi2_g11 + chi2_g1m1 + chi2_g20;
-	std::cerr << "\tTotal chi2: " << chi2 << "\n";
-	std::cerr << "\tReduced chi2: " << chi2 / (nDataPoints-num_pars) << "\n";
-	std::cerr << "\tIndividual chi2:\n";
-	std::cerr << "\t\tG10: " << chi2_g10 << "\t" << chi2_g10/(g10_data.size()-4) << "\n";
-	std::cerr << "\t\tG1m1: " << chi2_g1m1 << "\t" << chi2_g1m1/(g1m1_data.size()-5) << "\n";
-	std::cerr << "\t\tG11: " << chi2_g11 << "\t" << chi2_g11/(g11_data.size()-5) << "\n";
-	std::cerr << "\t\tG20: " << chi2_g20 << "\t" << chi2_g20/(g20_data.size()-5) << "\n";
-	std::cerr << "\tCurrent residuals: \n";
-	for(int i = 0; i < m ; ++i) std::cerr << "\t\t" << fvec[i] << "\n";
-	std::cerr << "**********************************************\n\n";
+	std::cout << "\tTotal chi2: " << chi2 << "\n";
+	std::cout << "\tReduced chi2: " << chi2 / (nDataPoints-num_pars) << "\n";
+	std::cout << "\tIndividual chi2:\n";
+	std::cout << "\t\tG10: " << chi2_g10 << "\t" << chi2_g10/(g10_data.size()-4) << "\n";
+	std::cout << "\t\tG1m1: " << chi2_g1m1 << "\t" << chi2_g1m1/(g1m1_data.size()-5) << "\n";
+	std::cout << "\t\tG11: " << chi2_g11 << "\t" << chi2_g11/(g11_data.size()-5) << "\n";
+	std::cout << "\t\tG20: " << chi2_g20 << "\t" << chi2_g20/(g20_data.size()-5) << "\n";
+	std::cout << "\tCurrent residuals: \n";
+	for(int i = 0; i < m ; ++i) std::cout << "\t\t" << i << " " << fvec[i] << "\n";
+	std::cout << "**********************************************\n\n";
 
 	return 0.;
 }
@@ -337,16 +333,6 @@ double alpha_g10( double G, const double *pars ){
 	}
 
 	double norm = 0;
-	//double a = pars[0];
-	//double b = pars[1];
-	//double emax = pars[2];
-	//double alpha0 = pars[3];
-	//double shift = pars[4];
-	//double a = 2;
-	//double b = 1.5;
-	//double emax = pars[0];
-	//double alpha0 = pars[1];
-	//double shift = pars[2];
 	double a = pars[0];
 	double b = pars[1];
 	double alpha0 = pars[2];
@@ -354,8 +340,6 @@ double alpha_g10( double G, const double *pars ){
 	double g1m1_shift = pars[4];
 	double g11_shift = pars[5];
 	double g20_shift = pars[6];
-	//double p_electrode = pars[7];
-	//double p_ring = pars[8];
 	double p = pars[7];
 	double p_electrode, p_ring;
 	if( diffuse_opt == 0 ){
@@ -369,6 +353,10 @@ double alpha_g10( double G, const double *pars ){
 	else if(diffuse_opt == 2 ){
 		p_electrode = p;
 		p_ring = 1;
+	}
+	else if(diffuse_opt == 3){
+		p_electrode = pars[7];
+		p_ring = pars[8];
 	}
 
 	// First we need to calculate <z>:
@@ -423,16 +411,6 @@ double alpha_g11( double G, const double *pars ){
 	}
 
 	double norm = 0;
-	//double a = pars[0];
-	//double b = pars[1];
-	//double emax = pars[2];
-	//double alpha0 = pars[3];
-	//double shift = pars[4];
-	//double a = 2;
-	//double b = 1.5;
-	//double emax = pars[0];
-	//double alpha0 = pars[1];
-	//double shift = pars[2];
 	double a = pars[0];
 	double b = pars[1];
 	double alpha0 = pars[2];
@@ -440,8 +418,6 @@ double alpha_g11( double G, const double *pars ){
 	double g1m1_shift = pars[4];
 	double g11_shift = pars[5];
 	double g20_shift = pars[6];
-	//double p_electrode = pars[7];
-	//double p_ring = pars[8];
 	double p = pars[7];
 	double p_electrode, p_ring;
 	if( diffuse_opt == 0 ){
@@ -455,6 +431,10 @@ double alpha_g11( double G, const double *pars ){
 	else if(diffuse_opt == 2 ){
 		p_electrode = p;
 		p_ring = 1;
+	}
+	else if(diffuse_opt == 3){
+		p_electrode = pars[7];
+		p_ring = pars[8];
 	}
 
 	// First we need to calculate <z>:
@@ -488,16 +468,6 @@ double alpha_g1m1( double G, const double *pars ){
 	}
 
 	double norm = 0;
-	//double a = pars[0];
-	//double b = pars[1];
-	//double emax = pars[2];
-	//double alpha0 = pars[3];
-	//double shift = pars[4];
-	//double a = 2;
-	//double b = 1.5;
-	//double emax = pars[0];
-	//double alpha0 = pars[1];
-	//double shift = pars[2];
 	double a = pars[0];
 	double b = pars[1];
 	double alpha0 = pars[2];
@@ -505,8 +475,6 @@ double alpha_g1m1( double G, const double *pars ){
 	double g1m1_shift = pars[4];
 	double g11_shift = pars[5];
 	double g20_shift = pars[6];
-	//double p_electrode = pars[7];
-	//double p_ring = pars[8];
 	double p = pars[7];
 	double p_electrode, p_ring;
 	if( diffuse_opt == 0 ){
@@ -520,6 +488,10 @@ double alpha_g1m1( double G, const double *pars ){
 	else if(diffuse_opt == 2 ){
 		p_electrode = p;
 		p_ring = 1;
+	}
+	else if(diffuse_opt == 3){
+		p_electrode = pars[7];
+		p_ring = pars[8];
 	}
 
 	// First we need to calculate <z>:
@@ -555,16 +527,6 @@ double alpha_g20( double G, const double *pars ){
 	}
 
 	double norm = 0;
-	//double a = pars[0];
-	//double b = pars[1];
-	//double emax = pars[2];
-	//double alpha0 = pars[3];
-	//double shift = pars[4];
-	//double a = 2;
-	//double b = 1.5;
-	//double emax = pars[0];
-	//double alpha0 = pars[1];
-	//double shift = pars[2];
 	double a = pars[0];
 	double b = pars[1];
 	double alpha0 = pars[2];
@@ -572,8 +534,6 @@ double alpha_g20( double G, const double *pars ){
 	double g1m1_shift = pars[4];
 	double g11_shift = pars[5];
 	double g20_shift = pars[6];
-	//double p_electrode = pars[7];
-	//double p_ring = pars[8];
 	double p = pars[7];
 	double p_electrode, p_ring;
 	if( diffuse_opt == 0 ){
@@ -587,6 +547,10 @@ double alpha_g20( double G, const double *pars ){
 	else if(diffuse_opt == 2 ){
 		p_electrode = p;
 		p_ring = 1;
+	}
+	else if(diffuse_opt == 3){
+		p_electrode = pars[7];
+		p_ring = pars[8];
 	}
 
 	// First we need to calculate <z>:
@@ -617,7 +581,7 @@ void load_data(){
 	std::string line;
 
 	// G10
-	f.open("../data/g10_data.txt");
+	f.open("/home/efrain/gradient_fit/data/g10_data.txt");
 	f.ignore(1000, '\n'); // skip 1 line of the file
 	if( f.is_open() ){
 		while( getline(f,line) ){
@@ -639,7 +603,7 @@ void load_data(){
 	f.close();
 
 	// G1m1
-	f.open("../data/g1m1_data.txt");
+	f.open("/home/efrain/gradient_fit/data/g1m1_data.txt");
 	f.ignore(1000, '\n'); // skip 1 line of the file
 	if( f.is_open() ){
 		while( getline(f,line) ){
@@ -661,7 +625,7 @@ void load_data(){
 	f.close();
 
 	// G11
-	f.open("../data/g11_data.txt");
+	f.open("/home/efrain/gradient_fit/data/g11_data.txt");
 	f.ignore(1000, '\n'); // skip 1 line of the file
 	if( f.is_open() ){
 		while( getline(f,line) ){
@@ -683,7 +647,7 @@ void load_data(){
 	f.close();
 
 	// G20
-	f.open("../data/g20_data.txt");
+	f.open("/home/efrain/gradient_fit/data/g20_data.txt");
 	f.ignore(1000, '\n'); // skip 1 line of the file
 	if( f.is_open() ){
 		while( getline(f,line) ){
