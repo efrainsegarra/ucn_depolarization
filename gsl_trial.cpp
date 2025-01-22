@@ -137,8 +137,8 @@ int main(int argc, char ** argv){
 			nDataPoints,	nParams,	params,
 			fvec,	1e-7,
 			iwork,	dwork,	sdwork);
-	//cout << "...done minimizing\n";
-	//cout << "r value of minimization: " << r << "\n";
+	cout << "...done minimizing\n";
+	cout << "r value of minimization: " << r << "\n";
 	// Print out the final parameters found:
 	cout << "\n";
 	cout << "MinPars:\t";
@@ -147,12 +147,14 @@ int main(int argc, char ** argv){
 		cout << params[i] << "\t";
 	}
 	cout << "\n";
-	//for( double G = -300 ; G <= 300 ; G += 1 ){
-	//for( do	double theo = alpha(G,params);
-	//for( do	cout << G << " " << theo << "\n";
-	//for( do}
-
-	cout << "\n";
+	for( double G = -300 ; G <= 300 ; G += 1 ){
+		double theo_g10 = alpha_g10(G,params);
+		double theo_g11 = alpha_g11(G,params);
+		double theo_g1m1 = alpha_g1m1(G,params);
+		double theo_g20 = alpha_g20(G,params);
+		cout << "theory: " << G << " " << theo_g10 << " " << theo_g11 << " " << theo_g1m1 << " " << theo_g20 << "\n";
+	}
+	//cout << "\n";
 
 
 
