@@ -31,6 +31,7 @@ int num_pars = -1;
 int bootstrap_opt = -1;
 int bottop_opt = -1;
 int diffuse_opt = -1;
+int dataset = -1;
 struct DataPoint{
 	double G;
 	double AlphaTop;
@@ -59,8 +60,8 @@ double emax = 35;				// neV
 // Main
 int main(int argc, char ** argv){
 
-	if (argc<5){
-		cout << "Wrong number of arguments used.\n\tPlease instead use: ./code [bootstrap opt] [bot_top opt] [diffuse opt] [emax]\n";
+	if (argc<6){
+		cout << "Wrong number of arguments used.\n\tPlease instead use: ./code [bootstrap opt] [bot_top opt] [diffuse opt] [emax] [rexolite quartz opt]\n";
 		cout << "**********************************\n";
 		cout << "\t\t[bootstrap opt == 0]: Don't bootstrap\n";
 		cout << "\t\t[bootstrap opt == 1]: Bootstrap\n";
@@ -75,6 +76,9 @@ int main(int argc, char ** argv){
 		cout << "**********************************\n";
 		cout << "\t\t[emax]: 35 (rexolite) or 54 (aluminium)\n";
 		cout << "**********************************\n";
+		cout << "\t\t[rexolite quartz opt == 0]: Fit rexolite data\n";
+		cout << "\t\t[rexolite quartz opt == 1]: Fit quartz data\n";
+		cout << "**********************************\n";
 
 		return -1;
 	}
@@ -82,10 +86,12 @@ int main(int argc, char ** argv){
 	bottop_opt = atoi(argv[2]);
 	diffuse_opt = atoi(argv[3]);
 	emax = atoi(argv[4]);
+	dataset = atoi(argv[5]);
 	if( bootstrap_opt != 0 && bootstrap_opt != 1 )		{ cout << "unexpected bootstrap input!\n"; exit(-1); }
 	if( bottop_opt != 0 && bottop_opt != 1 )		{ cout << "unexpected bot/top input!\n"; exit(-1); }
 	if( diffuse_opt < 0 || diffuse_opt > 3 )		{ cout << "unexpected diffuse input!\n"; exit(-1); }
 	if( emax < 0 || emax > 230 )				{ cout << "unexpected emax input!\n"; exit(-1); }
+	if( dataset != 0 && dataset != 1 )			{ cout << "unexpected rexolite quartz input!\n"; exit(-1); }
 	// Random seed for offsets
 	srand (time(NULL));
 	//srand(1);	
@@ -579,9 +585,19 @@ double alpha_g20( double G, const double *pars ){
 void load_data(){
 	std::ifstream f;
 	std::string line;
+	string check;
+
 
 	// G10
-	f.open("/home/efrain/gradient_fit/data/g10_data.txt");
+	if( dataset == 0 ){
+		f.open("/home/efrain/gradient_fit/data/g10_data.txt");
+		check = "75scut";
+	}
+	if( dataset == 1 ){
+		f.open("/home/efrain/gradient_fit/data/g10_quartz_data.txt");
+		check = "Nominal";
+	}
+	
 	f.ignore(1000, '\n'); // skip 1 line of the file
 	if( f.is_open() ){
 		while( getline(f,line) ){
@@ -589,7 +605,7 @@ void load_data(){
 			string flag;
 			double g, alphab, errb, alphat, errt;
 			ss >> flag >> g >> alphab >> errb >> alphat >> errt;
-			if( flag == "75scut" ){
+			if( flag == check ){
 				DataPoint dat;
 				dat.G = g;
 				dat.AlphaTop = alphat;
@@ -603,7 +619,15 @@ void load_data(){
 	f.close();
 
 	// G1m1
-	f.open("/home/efrain/gradient_fit/data/g1m1_data.txt");
+	if( dataset == 0 ){
+		f.open("/home/efrain/gradient_fit/data/g1m1_data.txt");
+		check = "75scut";
+	}
+	if( dataset == 1 ){
+		f.open("/home/efrain/gradient_fit/data/g1m1_quartz_data.txt");
+		check = "Nominal";
+	}
+
 	f.ignore(1000, '\n'); // skip 1 line of the file
 	if( f.is_open() ){
 		while( getline(f,line) ){
@@ -611,7 +635,7 @@ void load_data(){
 			string flag;
 			double g, alphab, errb, alphat, errt;
 			ss >> flag >> g >> alphab >> errb >> alphat >> errt;
-			if( flag == "75scut" ){
+			if( flag == check ){
 				DataPoint dat;
 				dat.G = g;
 				dat.AlphaTop = alphat;
@@ -625,7 +649,15 @@ void load_data(){
 	f.close();
 
 	// G11
-	f.open("/home/efrain/gradient_fit/data/g11_data.txt");
+	if( dataset == 0 ){
+		f.open("/home/efrain/gradient_fit/data/g11_data.txt");
+		check = "75scut";
+	}
+	if( dataset == 1 ){
+		f.open("/home/efrain/gradient_fit/data/g11_quartz_data.txt");
+		check = "Nominal";
+	}
+
 	f.ignore(1000, '\n'); // skip 1 line of the file
 	if( f.is_open() ){
 		while( getline(f,line) ){
@@ -633,7 +665,7 @@ void load_data(){
 			string flag;
 			double g, alphab, errb, alphat, errt;
 			ss >> flag >> g >> alphab >> errb >> alphat >> errt;
-			if( flag == "75scut" ){
+			if( flag == check ){
 				DataPoint dat;
 				dat.G = g;
 				dat.AlphaTop = alphat;
@@ -647,7 +679,15 @@ void load_data(){
 	f.close();
 
 	// G20
-	f.open("/home/efrain/gradient_fit/data/g20_data.txt");
+	if( dataset == 0 ){
+		f.open("/home/efrain/gradient_fit/data/g20_data.txt");
+		check = "75scut";
+	}
+	if( dataset == 1 ){
+		f.open("/home/efrain/gradient_fit/data/g20_quartz_data.txt");
+		check = "Nominal";
+	}
+
 	f.ignore(1000, '\n'); // skip 1 line of the file
 	if( f.is_open() ){
 		while( getline(f,line) ){
@@ -655,7 +695,7 @@ void load_data(){
 			string flag;
 			double g, alphab, errb, alphat, errt;
 			ss >> flag >> g >> alphab >> errb >> alphat >> errt;
-			if( flag == "75scut" ){
+			if( flag == check ){
 				DataPoint dat;
 				dat.G = g;
 				dat.AlphaTop = alphat;
