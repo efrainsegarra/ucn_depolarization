@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <iomanip>
 #include <string>
+#include <libInterpolate/Interpolate.hpp>
 
 using std::cout;
 using std::cerr;
@@ -95,6 +96,8 @@ int main(int argc, char ** argv){
 	// Random seed for offsets
 	srand (time(NULL));
 	//srand(1);	
+	
+	_1D::CubicSplineInterpolator<double> interp;
 
 	///////////////////////////////////////////////////////////////////////////
 	// Load the data structure that we will use:
@@ -376,6 +379,7 @@ double alpha_g10( double G, const double *pars ){
 		avg_z += (zbar(en) * espec(en,a,b,emax) * en_step);
 	}
 	avg_z /= norm;
+	//cout << "\t\t\t" << avg_z << "\n";
 
 
 	// Now we can calculate alpha(G):

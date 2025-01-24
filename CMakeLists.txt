@@ -5,12 +5,13 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 
 #find_package(ROOT REQUIRED)
 find_package(CMinpack REQUIRED)
+find_package(libInterpolate REQUIRED)
 project (gradient_fit)
 
 
-set(INCLUDES ${CMAKE_SOURCE_DIR}/include /xdata/CMINPACK/include/cminpack-1 )
+set(INCLUDES ${CMAKE_SOURCE_DIR}/include /xdata/CMINPACK/include/cminpack-1 /xdata/INTERPOLATOR/include/libInterpolate)
 include_directories(${INCLUDES})
 
 
 add_executable(gsl_trial gsl_trial.cpp)
-target_link_libraries(gsl_trial cminpack::cminpack )
+target_link_libraries(gsl_trial cminpack::cminpack libInterpolate::Interpolate )
